@@ -35,10 +35,7 @@ services:
       - "8088:8088"
       - "8089:8089"
       - "5038:5038"
-      - target: 10000
-        published: "10000-20000"
-        protocol: udp
-        mode: host
+      - "10000-20000:10000-20000/udp"
     volumes:
       - ./asterisk:/etc/asterisk:ro
       - asterisk-keys:/etc/asterisk/keys
@@ -75,13 +72,17 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+        VITE_WS_URL: http://localhost:3000
+        VITE_SIP_WS_URL: ws://localhost:8088/ws
     container_name: telephony-frontend
     depends_on:
       - backend
     environment:
       VITE_API_URL: http://localhost:3000
-      VITE_WS_URL: ws://localhost:3000/events
-      VITE_SIP_WS_URL: wss://localhost:8089/ws
+      VITE_WS_URL: http://localhost:3000
+      VITE_SIP_WS_URL: ws://localhost:8088/ws
     ports:
       - "5173:80"
     restart: unless-stopped

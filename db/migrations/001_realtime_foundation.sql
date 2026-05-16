@@ -346,8 +346,8 @@ INSERT INTO ps_endpoints (
   allow_subscribe
 )
 VALUES
-  ('6001', 'transport-wss', 'internal', 'all', 'opus,ulaw,alaw', '6001', '6001', 'yes', 'no', 'yes', 'yes', 'dtls', 'yes', 'fingerprint', 'actpass', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no'),
-  ('6002', 'transport-wss', 'internal', 'all', 'opus,ulaw,alaw', '6002', '6002', 'yes', 'no', 'yes', 'yes', 'dtls', 'yes', 'fingerprint', 'actpass', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no')
+  ('6001', 'transport-ws', 'internal', 'all', 'opus,ulaw,alaw', '6001', '6001', 'yes', 'no', 'yes', 'yes', 'dtls', 'yes', 'fingerprint', 'actpass', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no'),
+  ('6002', 'transport-ws', 'internal', 'all', 'opus,ulaw,alaw', '6002', '6002', 'yes', 'no', 'yes', 'yes', 'dtls', 'yes', 'fingerprint', 'actpass', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO agents (tenant_id, extension, display_name, sip_password, status)

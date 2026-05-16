@@ -58,7 +58,7 @@ export class ProvisioningService {
 
   private endpointDefaults(extension: string, codecs: string) {
     return {
-      transport: 'transport-wss',
+      transport: 'transport-ws',
       context: 'internal',
       disallow: 'all',
       allow: codecs,

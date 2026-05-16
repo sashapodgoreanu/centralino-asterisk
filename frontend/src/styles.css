@@ -96,6 +96,17 @@ label {
   grid-template-columns: 320px minmax(360px, 1fr) 360px;
 }
 
+.errorBanner {
+  background: #ffe1d9;
+  border: 1px solid #e2afa0;
+  border-radius: 8px;
+  color: #8c2f1e;
+  font-weight: 700;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+  padding: 12px 14px;
+}
+
 .panel {
   background: #ffffff;
   border: 1px solid #dbe1d4;

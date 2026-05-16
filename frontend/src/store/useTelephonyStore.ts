@@ -26,12 +26,14 @@ interface TelephonyStore {
   registrationState: RegistrationState;
   callState: CallState;
   muted: boolean;
+  lastError?: string;
   agents: Agent[];
   events: TelephonyEvent[];
   setField: (name: 'extension' | 'password' | 'target' | 'transferTarget', value: string) => void;
   setRegistrationState: (state: RegistrationState) => void;
   setCallState: (state: CallState) => void;
   setMuted: (muted: boolean) => void;
+  setLastError: (message?: string) => void;
   setAgents: (agents: Agent[]) => void;
   pushEvent: (event: TelephonyEvent) => void;
 }
@@ -44,12 +46,14 @@ export const useTelephonyStore = create<TelephonyStore>((set) => ({
   registrationState: 'idle',
   callState: 'idle',
   muted: false,
+  lastError: undefined,
   agents: [],
   events: [],
   setField: (name, value) => set({ [name]: value }),
   setRegistrationState: (registrationState) => set({ registrationState }),
   setCallState: (callState) => set({ callState }),
   setMuted: (muted) => set({ muted }),
+  setLastError: (lastError) => set({ lastError }),
   setAgents: (agents) => set({ agents }),
   pushEvent: (event) => set((state) => ({ events: [event, ...state.events].slice(0, 40) })),
 }));

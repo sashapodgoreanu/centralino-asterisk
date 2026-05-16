@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import AmiClient from 'asterisk-ami-client';
+import AmiClient = require('asterisk-ami-client');
 import { TelephonyEventBus } from '../telephony-event-bus.service';
 
 @Injectable()

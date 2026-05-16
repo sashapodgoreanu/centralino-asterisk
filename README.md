@@ -102,6 +102,8 @@ If your npm registry is configured for a private feed, install with an explicit
 registry when needed:
 
 ```powershell
+node --version
+
 cd backend
 npm install --registry=https://registry.npmjs.org/
 npm run build
@@ -118,3 +120,6 @@ cd backend
 $env:DATABASE_URL='postgresql://asterisk:asterisk@localhost:5432/asterisk?schema=public'
 npx prisma validate
 ```
+
+The repository pins Node `22.16.0` through `.nvmrc`, `.node-version`, and
+`.tool-versions`. Use your Node selector before installing dependencies.

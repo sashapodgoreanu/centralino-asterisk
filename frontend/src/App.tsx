@@ -14,8 +14,8 @@ import { sipClient } from './telephony/sipClient';
 import { useTelephonyStore } from './store/useTelephonyStore';
 
 const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-const wsUrl = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3000/events';
-const sipWsUrl = import.meta.env.VITE_SIP_WS_URL ?? 'wss://localhost:8089/ws';
+const wsUrl = import.meta.env.VITE_WS_URL ?? 'http://localhost:3000';
+const sipWsUrl = import.meta.env.VITE_SIP_WS_URL ?? 'ws://localhost:8088/ws';
 const sipHost = new URL(sipWsUrl).hostname;
 
 export function App() {
@@ -27,12 +27,14 @@ export function App() {
     registrationState,
     callState,
     muted,
+    lastError,
     agents,
     events,
     setField,
     setRegistrationState,
     setCallState,
     setMuted,
+    setLastError,
     setAgents,
     pushEvent,
   } = useTelephonyStore();
@@ -45,14 +47,20 @@ export function App() {
   useEffect(() => {
     const socket = io(wsUrl, { path: '/events', transports: ['websocket'] });
     socket.on('telephony:event', pushEvent);
+    socket.on('connect_error', (error) => setLastError(`Events websocket: ${error.message}`));
     return () => {
       socket.disconnect();
     };
-  }, [pushEvent]);
+  }, [pushEvent, setLastError]);
 
   const loadAgents = async () => {
-    const response = await fetch(`${apiUrl}/agents`);
-    setAgents(await response.json());
+    try {
+      const response = await fetch(`${apiUrl}/agents`);
+      setAgents(await response.json());
+      setLastError(undefined);
+    } catch (error) {
+      setLastError(`Agents API: ${(error as Error).message}`);
+    }
   };
 
   useEffect(() => {
@@ -61,6 +69,7 @@ export function App() {
 
   const register = async () => {
     setRegistrationState('connecting');
+    setLastError(undefined);
     try {
       await sipClient.register({
         wsServer: sipWsUrl,
@@ -70,7 +79,8 @@ export function App() {
         onCallState: setCallState,
       });
       setRegistrationState('registered');
-    } catch {
+    } catch (error) {
+      setLastError(`SIP register: ${(error as Error).message}`);
       setRegistrationState('failed');
     }
   };
@@ -82,17 +92,33 @@ export function App() {
   };
 
   const provisionAgent = async () => {
-    const response = await fetch(`${apiUrl}/agents`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        extension,
-        password,
-        displayName: currentAgent?.displayName ?? `Agent ${extension}`,
-      }),
-    });
-    if (response.ok) {
-      await loadAgents();
+    try {
+      const response = await fetch(`${apiUrl}/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          extension,
+          password,
+          displayName: currentAgent?.displayName ?? `Agent ${extension}`,
+        }),
+      });
+      if (response.ok) {
+        await loadAgents();
+      } else {
+        setLastError(`Provision failed: ${response.status}`);
+      }
+    } catch (error) {
+      setLastError(`Provision API: ${(error as Error).message}`);
+    }
+  };
+
+  const startCall = async () => {
+    setLastError(undefined);
+    try {
+      await sipClient.call(target, sipHost, setCallState);
+    } catch (error) {
+      setCallState('failed');
+      setLastError(`SIP call: ${(error as Error).message}`);
     }
   };
 
@@ -116,6 +142,8 @@ export function App() {
         </div>
         <div className={`status ${registrationState}`}>{registrationState}</div>
       </header>
+
+      {lastError && <div className="errorBanner">{lastError}</div>}
 
       <section className="workspace">
         <div className="panel soft">
@@ -182,7 +210,7 @@ export function App() {
             <button
               className="primary"
               disabled={registrationState !== 'registered'}
-              onClick={() => sipClient.call(target, sipHost, setCallState)}
+              onClick={startCall}
             >
               <Phone size={19} />
               Call

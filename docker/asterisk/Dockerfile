@@ -1,4 +1,4 @@
-FROM asterisk/asterisk:22
+FROM andrius/asterisk:22
 
 USER root
 
