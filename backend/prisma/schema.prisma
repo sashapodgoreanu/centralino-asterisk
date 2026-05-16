@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug      String        @unique @db.VarChar(80)
+  name      String        @db.VarChar(160)
+  agents    Agent[]
+  queues    Queue[]
+  rules     RoutingRule[]
+  calls     CallSession[]
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("tenants")
+}
+
+model Agent {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  extension   String   @db.VarChar(40)
+  displayName String   @map("display_name") @db.VarChar(160)
+  sipPassword String   @map("sip_password") @db.VarChar(120)
+  status      String   @default("offline") @db.VarChar(40)
+  metadata    Json     @default("{}")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, extension])
+  @@map("agents")
+}
+
+model PsEndpoint {
+  id                        String  @id @db.VarChar(40)
+  transport                 String? @db.VarChar(40)
+  aors                      String? @db.VarChar(200)
+  auth                      String? @db.VarChar(40)
+  context                   String? @db.VarChar(40)
+  disallow                  String? @db.VarChar(200)
+  allow                     String? @db.VarChar(200)
+  directMedia               String? @map("direct_media") @db.VarChar(3)
+  useAvpf                   String? @map("use_avpf") @db.VarChar(3)
+  mediaEncryption           String? @map("media_encryption") @db.VarChar(20)
+  dtlsAutoGenerateCert      String? @map("dtls_auto_generate_cert") @db.VarChar(3)
+  dtlsVerify                String? @map("dtls_verify") @db.VarChar(40)
+  dtlsSetup                 String? @map("dtls_setup") @db.VarChar(20)
+  iceSupport                String? @map("ice_support") @db.VarChar(3)
+  mediaUseReceivedTransport String? @map("media_use_received_transport") @db.VarChar(3)
+  rtcpMux                   String? @map("rtcp_mux") @db.VarChar(3)
+  rewriteContact            String? @map("rewrite_contact") @db.VarChar(3)
+  rtpSymmetric              String? @map("rtp_symmetric") @db.VarChar(3)
+  forceRport                String? @map("force_rport") @db.VarChar(3)
+  forceAvp                  String? @map("force_avp") @db.VarChar(3)
+  allowTransfer             String? @map("allow_transfer") @db.VarChar(3)
+  allowSubscribe            String? @map("allow_subscribe") @db.VarChar(3)
+  webrtc                    String? @db.VarChar(3)
+
+  @@map("ps_endpoints")
+}
+
+model PsAuth {
+  id       String  @id @db.VarChar(40)
+  authType String? @map("auth_type") @db.VarChar(20)
+  username String? @db.VarChar(40)
+  password String? @db.VarChar(80)
+
+  @@map("ps_auths")
+}
+
+model PsAor {
+  id                String @id @db.VarChar(40)
+  maxContacts       Int?   @map("max_contacts")
+  removeExisting    String? @map("remove_existing") @db.VarChar(3)
+  removeUnavailable String? @map("remove_unavailable") @db.VarChar(3)
+  qualifyFrequency  Int?   @map("qualify_frequency")
+  supportPath       String? @map("support_path") @db.VarChar(3)
+
+  @@map("ps_aors")
+}
+
+model Queue {
+  name       String        @id @db.VarChar(128)
+  tenantId   String?       @map("tenant_id") @db.Uuid
+  strategy   String?       @db.VarChar(128)
+  timeout    Int?
+  ringinuse  String?       @db.VarChar(3)
+  metadata   Json          @default("{}")
+  tenant     Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members    QueueMember[]
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("queues")
+}
+
+model QueueMember {
+  uniqueid       Int    @id @default(autoincrement())
+  queueName      String @map("queue_name") @db.VarChar(128)
+  interface      String @db.VarChar(128)
+  membername     String? @db.VarChar(128)
+  stateInterface String? @map("state_interface") @db.VarChar(128)
+  penalty        Int?
+  paused         Int?
+  wrapuptime     Int?
+  ringinuse      String? @db.VarChar(3)
+  queue          Queue  @relation(fields: [queueName], references: [name], onDelete: Cascade)
+
+  @@unique([queueName, interface])
+  @@map("queue_members")
+}
+
+model RoutingRule {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String   @db.VarChar(160)
+  priority  Int      @default(100)
+  match     Json     @default("{}")
+  action    Json     @default("{}")
+  enabled   Boolean  @default(true)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("routing_rules")
+}
+
+model CallSession {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String?   @map("tenant_id") @db.Uuid
+  ariChannelId String?   @map("ari_channel_id") @db.VarChar(120)
+  caller       String?   @db.VarChar(120)
+  callee       String?   @db.VarChar(120)
+  state        String    @default("new") @db.VarChar(40)
+  direction    String    @default("internal") @db.VarChar(40)
+  metadata     Json      @default("{}")
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  @@map("call_sessions")
+}
