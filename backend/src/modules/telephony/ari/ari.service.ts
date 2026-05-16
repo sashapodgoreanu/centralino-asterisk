@@ -121,9 +121,16 @@ export class AriService implements OnApplicationBootstrap {
     try {
       const bridge = this.client.Bridge(bridgeId);
       const bridgeData = await bridge.get();
-      if (!bridgeData?.channels?.length) {
-        await bridge.destroy();
-      }
+      const remainingChannelIds = (bridgeData?.channels ?? []).filter((channelId: string) => channelId !== channel.id);
+
+      await Promise.all(
+        remainingChannelIds.map(async (channelId: string) => {
+          this.activeBridges.delete(channelId);
+          await this.client.Channel(channelId).hangup().catch(() => undefined);
+        }),
+      );
+
+      await bridge.destroy().catch(() => undefined);
     } catch {
       this.activeBridges.delete(channel.id);
     }

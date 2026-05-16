@@ -57,6 +57,10 @@ Services:
 - Asterisk WSS: `wss://localhost:8089/ws`
 - PostgreSQL: `localhost:5432`
 
+Database migrations are applied by the `postgres-migrations` service. Add future
+database changes as ordered files under `db/migrations`, for example
+`003_add_call_indexes.sql`. Applied files are tracked in `schema_migrations`.
+
 Seeded WebRTC agents:
 
 ```text

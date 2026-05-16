@@ -53,6 +53,7 @@ model PsEndpoint {
   dtlsSetup                 String? @map("dtls_setup") @db.VarChar(20)
   iceSupport                String? @map("ice_support") @db.VarChar(3)
   mediaUseReceivedTransport String? @map("media_use_received_transport") @db.VarChar(3)
+  mediaAddress               String? @map("media_address") @db.VarChar(80)
   rtcpMux                   String? @map("rtcp_mux") @db.VarChar(3)
   rewriteContact            String? @map("rewrite_contact") @db.VarChar(3)
   rtpSymmetric              String? @map("rtp_symmetric") @db.VarChar(3)

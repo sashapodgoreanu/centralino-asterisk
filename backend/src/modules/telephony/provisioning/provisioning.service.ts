@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 export interface WebRtcEndpointInput {
@@ -9,6 +10,8 @@ export interface WebRtcEndpointInput {
 
 @Injectable()
 export class ProvisioningService {
+  constructor(private readonly config: ConfigService) {}
+
   async provisionWebRtcEndpoint(tx: Prisma.TransactionClient, input: WebRtcEndpointInput) {
     const codecs = input.codecs ?? 'opus,ulaw,alaw';
 
@@ -57,6 +60,8 @@ export class ProvisioningService {
   }
 
   private endpointDefaults(extension: string, codecs: string) {
+    const mediaAddress = this.config.get<string>('ASTERISK_MEDIA_ADDRESS');
+
     return {
       transport: 'transport-ws',
       context: 'internal',
@@ -74,6 +79,7 @@ export class ProvisioningService {
       dtlsSetup: 'actpass',
       iceSupport: 'yes',
       mediaUseReceivedTransport: 'yes',
+      mediaAddress,
       rtcpMux: 'yes',
       rewriteContact: 'yes',
       rtpSymmetric: 'yes',
